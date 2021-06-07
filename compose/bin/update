@@ -1,0 +1,9 @@
+#!/bin/bash
+set -o errexit
+mkdir -p tmpupdate && cd "$_"
+curl -s https://raw.githubusercontent.com/Rean1030/docker4magento/master/template | bash
+rm -rf .git
+rsync -av ./ ../
+cd ..
+rm -rf tmpupdate
+echo "docker4magento has been updated, run bin/restart to apply the updates"

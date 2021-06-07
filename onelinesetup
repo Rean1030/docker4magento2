@@ -1,0 +1,15 @@
+#!/bin/bash
+set -o errexit
+DOMAIN=${1:-magento.test}
+VERSION=${2:-2.4.2}
+EDITION=${3:-community}
+MODE=${4:-default}
+
+curl -s https://raw.githubusercontent.com/Rean1030/docker4magento/master/template | bash
+bin/download $VERSION $EDITION
+
+bin/stop $MODE
+
+./buildimages $DOMAIN $MODE
+
+bin/setup $DOMAIN $MODE

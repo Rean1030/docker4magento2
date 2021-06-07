@@ -1,0 +1,42 @@
+#!/bin/bash
+set -o errexit
+
+BASE_URL=${1:-magento.test}
+MODE=${2:-default}
+
+# start env containers
+if [[ "$MODE" == "developer" ]]; then
+  docker-compose -f docker-compose-env.yml -f docker-compose-env.dev.yml up -d
+  # stop to save memory
+  docker-compose -f docker-compose-env.yml -f docker-compose-env.dev.yml stop kibana
+else
+  docker-compose -f docker-compose-env.yml up -d
+  # stop to save memory
+  docker-compose -f docker-compose-env.yml stop kibana
+fi
+
+mv .vscode src
+
+# start app containers
+bin/start "$MODE"
+
+[ $? != 0 ] && echo "Failed to start Docker services" && exit
+
+# copy and trust if exist certificate authority
+if docker-compose -f docker-compose-app.yml exec -T -u root app cat /root/.local/share/mkcert/rootCA.pem | grep -q 'BEGIN CERTIFICATE'; then
+  docker cp "$(docker-compose -f docker-compose-app.yml ps -q app|awk '{print $1}')":/root/.local/share/mkcert/rootCA.pem .
+  echo "System password requested to install certificate authority on host..."
+  if [ "$(uname)" == "Darwin" ]; then
+    sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain rootCA.pem
+    rm rootCA.pem
+  else
+    sudo mv rootCA.pem /usr/local/share/ca-certificates/rootCA.pem
+    sudo update-ca-certificates
+  fi
+fi
+
+echo "Copying files from container to host after install..."
+bin/copyfromcontainer --all
+
+echo "Docker deployment setup complete."
+echo "You may now access your Magento instance at https://${BASE_URL}/"

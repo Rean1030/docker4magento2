@@ -1,0 +1,14 @@
+#!/bin/bash
+set -o errexit
+DOMAIN=${1:-magento.test}
+MODE=${2:-default}
+
+docker build -t magento/nginx:1.18 --build-arg MODE="$MODE" --build-arg SERVER_NAME="$DOMAIN" ./images/nginx/1.18/
+
+cp -rf ./src/ ./images/php/7.4/
+docker build -t magento/php:7.4 --build-arg MODE="$MODE" --build-arg SERVER_NAME="$DOMAIN" ./images/php/7.4/
+rm -rf ./images/php/7.4/src
+
+docker build -t magento/elasticsearch:7.6.2 ./images/elasticsearch/7.6/
+
+docker build -t magento/varnish:6.0 ./images/varnish/6.0/

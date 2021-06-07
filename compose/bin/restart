@@ -1,0 +1,4 @@
+#!/bin/bash
+# use "$@" to pass the params
+bin/stop "$@"
+bin/start "$@"

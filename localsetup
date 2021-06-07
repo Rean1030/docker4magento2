@@ -1,0 +1,21 @@
+#!/bin/bash
+set -o errexit
+DOMAIN=${1:-magento.test}
+VERSION=${2:-2.4.2}
+EDITION=${3:-community}
+MODE=${4:-default}
+
+if [ -d compose ]; then
+    mv compose/* -f ./
+    mv compose/.gitignore -f ./
+    mv compose/.vscode -f ./
+    rm -rf compose .git
+fi
+
+bin/download $VERSION $EDITION
+
+bin/stop $MODE
+
+./buildimages $DOMAIN $MODE
+
+bin/setup $DOMAIN $MODE

@@ -1,0 +1,8 @@
+#!/bin/bash
+MODE=${1:-default}
+
+if [[ "$MODE" == "developer" ]]; then
+    docker-compose -f docker-compose-app.yml -f docker-compose-app.dev.yml rm --stop
+else
+    docker-compose -f docker-compose-app.yml rm --stop
+fi
